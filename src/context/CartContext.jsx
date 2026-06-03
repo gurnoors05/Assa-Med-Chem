@@ -1,15 +1,11 @@
 import { createContext, useContext, useState } from 'react';
-import { toBase, calcPrice } from '../utils/units';
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
 
-  function addItem(product, orderedQty, orderedUnit) {
-    const baseQty = toBase(orderedQty, orderedUnit);
-    const lineTotal = calcPrice(orderedQty, orderedUnit, product.pricePerBase);
-
+  function addItem(product, orderedUnit) {
     const existing = items.find(
       i => i.productId === product.id && i.orderedUnit === orderedUnit
     );
@@ -17,12 +13,7 @@ export function CartProvider({ children }) {
     if (existing) {
       setItems(items.map(i =>
         i.productId === product.id && i.orderedUnit === orderedUnit
-          ? {
-              ...i,
-              orderedQty: i.orderedQty + orderedQty,
-              baseQty: i.baseQty + baseQty,
-              lineTotal: i.lineTotal + lineTotal,
-            }
+          ? { ...i, orderedQty: i.orderedQty + 1 }
           : i
       ));
     } else {
@@ -30,12 +21,10 @@ export function CartProvider({ children }) {
         productId: product.id,
         productName: product.name,
         sku: product.sku,
-        orderedQty,
+        orderedQty: 1,
         orderedUnit,
         baseUnit: product.baseUnit,
-        baseQty,
         pricePerBase: product.pricePerBase,
-        lineTotal,
       }]);
     }
   }
@@ -48,10 +37,8 @@ export function CartProvider({ children }) {
     setItems([]);
   }
 
-  const total = items.reduce((sum, i) => sum + i.lineTotal, 0);
-
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, clearCart, total }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, clearCart }}>
       {children}
     </CartContext.Provider>
   );

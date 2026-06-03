@@ -1,28 +1,17 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { compatibleUnits, fromBase, calcPrice, formatINR, UNIT_LABELS, toBase } from '../utils/units';
+import { compatibleUnits, fromBase, formatINR, UNIT_LABELS, toBase } from '../utils/units';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
   const units = compatibleUnits(product.baseUnit);
   const [selectedUnit, setSelectedUnit] = useState(units[0]);
-  const [qty, setQty] = useState('');
   const [added, setAdded] = useState(false);
 
-  const parsedQty = parseFloat(qty);
-  const validQty = !isNaN(parsedQty) && parsedQty > 0;
-  const lineTotal = validQty ? calcPrice(parsedQty, selectedUnit, product.pricePerBase) : null;
-
-  // Stock in display unit
   const stockDisplay = fromBase(product.stockBase, units[0]);
 
-  // Price per selected unit
-  const pricePerUnit = (product.pricePerBase * (selectedUnit === 'kg' ? 1000 : selectedUnit === 'L' ? 1000 : 1));
-
   function handleAdd() {
-    if (!validQty) return;
-    addItem(product, parsedQty, selectedUnit);
-    setQty('');
+    addItem(product, selectedUnit);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   }
@@ -62,15 +51,6 @@ export default function ProductCard({ product }) {
       </div>
 
       <div className="order-row">
-        <input
-          className="qty-input"
-          type="number"
-          min="0"
-          step="any"
-          value={qty}
-          onChange={e => setQty(e.target.value)}
-          placeholder="Qty"
-        />
         <select
           className="unit-select"
           value={selectedUnit}
@@ -83,17 +63,10 @@ export default function ProductCard({ product }) {
         <button
           className={`btn-add ${added ? 'added' : ''}`}
           onClick={handleAdd}
-          disabled={!validQty}
         >
           {added ? '✓' : '+'}
         </button>
       </div>
-
-      {validQty && lineTotal !== null && (
-        <div className="price-preview">
-          {parsedQty} {selectedUnit} → <strong>{formatINR(lineTotal)}</strong>
-        </div>
-      )}
     </div>
   );
 }
